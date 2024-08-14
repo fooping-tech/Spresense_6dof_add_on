@@ -125,6 +125,7 @@ void setup() {
 
   //DNN
   File nnbfile = Flash.open("model.nnb");
+  //File nnbfile = SD.open("model.nnb");
   int ret = dnnrt.begin(nnbfile);
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));

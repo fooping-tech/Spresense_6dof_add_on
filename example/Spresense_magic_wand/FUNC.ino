@@ -145,6 +145,12 @@ void Serial_main(){
 void SaveCSV(){
   char filename[16];
   sprintf(filename, "%01d%03d.csv", label, number);
+
+  //Flashに保存する場合
+//  Flash.remove(filename);
+//  File myFile = Flash.open(filename, FILE_WRITE);
+
+  //SDに保存する場合
   SD.remove(filename);
   File myFile = SD.open(filename, FILE_WRITE);
 
