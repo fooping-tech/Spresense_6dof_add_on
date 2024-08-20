@@ -10,5 +10,10 @@ SONYスプレッセンス用の6軸加速度角速度センサアドオンボー
 ![image](https://github.com/user-attachments/assets/646f3f08-03f8-418d-96d5-aa06e830b01a)
 
 
+## センサ方向
+
+![センサ方向](https://github.com/user-attachments/assets/81db852a-8891-4dcf-b33d-f0dd5062c35e)
+
+
 ## 回路図
 [回路図はこちらを参照してください](https://github.com/fooping-tech/Spresense_6dof_add_on/blob/main/sch/schematic.pdf)
