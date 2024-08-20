@@ -1,18 +1,16 @@
 # Spresense 6dof BMI270 add on board
 SONYスプレッセンス用の6軸加速度角速度センサアドオンボードのリポジトリです。
 
-<img width="452" alt="image" src="https://github.com/user-attachments/assets/a7418fe6-bab9-476e-b54f-b48d31ae6978">
-
+<img src="https://github.com/user-attachments/assets/68f9dd9c-f139-4de6-baef-347c4f25b32a" width="50%">
 ## 取り付け方
 
 方向に注意して取り付けてください。
 
-![image](https://github.com/user-attachments/assets/646f3f08-03f8-418d-96d5-aa06e830b01a)
-
+<img src="https://github.com/user-attachments/assets/013f2ab8-b3b0-4e57-8773-2656c0121e79" width="50%">
 
 ## センサ方向
 
-![センサ方向](https://github.com/user-attachments/assets/81db852a-8891-4dcf-b33d-f0dd5062c35e)
+<img src="https://github.com/user-attachments/assets/a65a9218-bcff-4227-a02a-3fc13700dfd9" width="50%">
 
 
 ## 回路図
