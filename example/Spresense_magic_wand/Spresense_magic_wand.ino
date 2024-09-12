@@ -124,8 +124,8 @@ void setup() {
   canvas4 = new CANVAS(240,240,0,0);    //杖軌跡
 
   //DNN
-  File nnbfile = Flash.open("model.nnb");
-  //File nnbfile = SD.open("model.nnb");
+  //File nnbfile = Flash.open("model.nnb");
+  File nnbfile = SD.open("model.nnb");
   int ret = dnnrt.begin(nnbfile);
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));
@@ -281,11 +281,12 @@ void loop() {
   }
   mainloop(currentMode);
 
+  /*
   //所定の加速度より早い場合キャンバスを消す
   if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*1.5){
-
-    //ResetCanvas();
+    ResetCanvas();
   }
+  */
 
 
 }
