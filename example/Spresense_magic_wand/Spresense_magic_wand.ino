@@ -114,6 +114,16 @@ int CheckCommand(){
 void setup() {
   Serial.begin(115200);
  
+  //SD
+  SD.begin();
+  //USB MSC
+  if (SD.beginUsbMsc()) {
+    Serial.println("USB MSC Failure!");
+  } else {
+    Serial.println("*** USB MSC Prepared! ***");
+    Serial.println("Insert SD and Connect Extension Board USB to PC.");
+  }
+
   //IMU
   IMU_Init();
 
