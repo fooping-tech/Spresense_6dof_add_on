@@ -18,3 +18,6 @@ SONYスプレッセンス用の6軸加速度角速度センサアドオンボー
 
 ## 回路図
 [回路図はこちらを参照してください](https://github.com/fooping-tech/Spresense_6dof_add_on/blob/main/sch/schematic.pdf)
+
+## 応用例
+[SPRESENSEで作る魔法の杖の解説ページ](https://elchika.com/article/36d2318e-f1a6-45ce-92c1-c1d168493275/)
