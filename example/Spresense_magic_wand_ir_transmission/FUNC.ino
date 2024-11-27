@@ -97,7 +97,7 @@ void MadgWick_Init(){
 //--------------------------------------
 //  Switch
 //--------------------------------------
-
+/*
 void SW_main(){
   //SW状態を取得
   bool swflag = switch1->check_change();
@@ -110,7 +110,7 @@ void SW_main(){
 bool SW_Check(){
   return switch1->check_change();
 }
-
+*/
 //--------------------------------------
 //  Record Functions
 //--------------------------------------

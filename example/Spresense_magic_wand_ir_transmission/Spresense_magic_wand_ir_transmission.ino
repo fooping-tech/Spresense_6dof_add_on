@@ -46,8 +46,8 @@ BMI270Class BMI270;
 CANVAS *canvas;
 
 //SW
-#include "SW.h"
-SW *switch1;
+//#include "SW.h"
+//SW *switch1;
 
 //MadgWick
 #include <MadgwickAHRS.h>
@@ -66,6 +66,9 @@ DNNVariable input(DNN_DATA_WIDTH*DNN_DATA_HEIGHT);
 static String const labels[4]= {"EIGHT", "CIRCLE", "MINUS", "NON"};
 int command =3;
 
+//NeoPixel
+#include "Spre.neo.hpp"
+SpreNeo neo;
 //mode
 // モードの列挙型
 enum MODE {
@@ -77,14 +80,14 @@ enum MODE {
 MODE currentMode = MODE4;
 MODE beforeMode = MODE4;
 
-int TaskSpan;       //タスク実行間隔
-uint32_t startTime; //開始時間
-uint32_t cycleTime; //サイクルタイム
-uint32_t deltaTime; //
-uint32_t spentTime; //経過時間
+int TaskSpan=100;       //タスク実行間隔
+uint32_t startTime=millis(); //開始時間
+uint32_t cycleTime=0; //サイクルタイム
+uint32_t deltaTime=0; //
+uint32_t spentTime=0; //経過時間
+uint32_t trigTime=millis(); //経過時間
 bool _InitCondition=false;  //初期化状態
 bool _DeinitCondition=false;  //終了時状態
-
 
 File myFile;
 bool audio=false;
@@ -104,11 +107,12 @@ int CheckCommand(){
 
   DNNVariable output = dnnrt.outputVariable(0);
   int index = output.maxIndex();
+  Serial.println(labels[index]+":"+output[index]);
   return index;
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
  
   //SD
   SD.begin();
@@ -123,19 +127,25 @@ void setup() {
   //IMU
   IMU_Init();
 
-  switch1 = new SW(PIN_D21,INPUT_PULLUP);
+  //switch1 = new SW(PIN_D21,INPUT_PULLUP);
   //タイマ割り込み
-  attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
+  startTimer();
+  //attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
 
   canvas = new CANVAS(240,240,0,0);    //杖軌跡
 
   //DNN
-  //File nnbfile = Flash.open("model.nnb");
-  File nnbfile = SD.open("model.nnb");
+  File nnbfile = Flash.open("model.nnb");
+  //File nnbfile = SD.open("model.nnb");
   int ret = dnnrt.begin(nnbfile);
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));
   }
+  
+  //LED
+  neo.begin();
+  neo.set(LEDKIND_BRESS, 128, 128, 128, 30);
+  neo.start();
   
   //ジャイロセンサ
   GyroInit();
@@ -143,6 +153,9 @@ void setup() {
   //MadgWick
   MadgWick_Init();
   
+  //IR
+
+  Serial2.begin(2400, SERIAL_8N1); 
   
   Serial.println("Setup_Finished!!");
 }
@@ -153,6 +166,14 @@ void CANVAS_main(){
   canvas->WandDraw28(heading,roll);
 }
 
+void stopTimer(){
+  detachTimerInterrupt();
+  tone(21,37900);
+}
+void startTimer(){
+  noTone(21);
+  attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
+}
 void mainloop(MODE m){
   //前回実行時からモードが変わってたら終了処理
   if(beforeMode != m)DeinitActive();
@@ -172,24 +193,46 @@ void mainloop(MODE m){
       DeinitFunction();
     }else{
       //Serial.println("main()");
+      //加速度のユークリッド距離を計算
+      int vec = IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ());
+      if(vec>11)trigTime=millis();//加速度が大きい場合はトリガタイムを更新
+      if(millis() - trigTime>1000){
+        stopTimer();
         //モードごとの処理
-    switch (m) {
-      case MODE1:
-        //TOF_SetLED(255,255,255);      
-        break;
+        switch (m) {
+          case MODE1:
+            //TOF_SetLED(255,255,255);
+            Serial.println(labels[0]);
+            Serial2.print('1');
+            neo.set(LEDKIND_LEFTSTAR, 0, 0, 128, 10);
+            ResetCanvas();
+            break;
 
-      case MODE2:
-        //TOF_SetLED(255,0,0);
-        break;
+          case MODE2:
+            Serial.println(labels[1]);
+            Serial2.print('2');
+            neo.set(LEDKIND_LEFTSTAR, 0, 128,0, 10);
 
-      case MODE3:
-        //TOF_SetLED(0,255,0);
-        //currentMode = MODE4;
-        break;
+            ResetCanvas();
+            //TOF_SetLED(255,0,0);
+            break;
 
-      case MODE4:
-        //TOF_SetLED(0,0,0);
-        break;
+          case MODE3:
+            Serial.println(labels[2]);
+            Serial2.print('3');
+            neo.set(LEDKIND_LEFTSTAR,128,0,0, 10);
+            ResetCanvas();
+            //TOF_SetLED(0,255,0);
+            //currentMode = MODE4;
+            break;
+
+          case MODE4:
+            Serial.println(labels[3]);
+            neo.set(LEDKIND_BRESS, 0, 0, 0, 10);
+            //TOF_SetLED(0,0,0);
+            break;
+        }
+        startTimer();
       }
       
     }
@@ -235,10 +278,14 @@ void loop() {
   //SW_main();         //ボタンチェック(押下時Reset処理)
   Serial_main();      //Arduinoシリアル操作
 
+  neo.update();
+  
   //モード起動時処理
   if(RECORD_MODE == 0){
     if(command==0){
       currentMode = MODE1;
+      //Serial.println(labels[0]);
+      neo.set(LEDKIND_BRESS, 0, 0, 128, 10);
       ledOn(LED0);
       ledOff(LED1);
       ledOff(LED2);
@@ -246,6 +293,8 @@ void loop() {
     }
     if(command==1){
       currentMode = MODE2;
+      //Serial.println(labels[1]);
+      neo.set(LEDKIND_BRESS, 0, 128, 0, 10);
       ledOn(LED1);
       ledOff(LED0);
       ledOff(LED2);
@@ -253,6 +302,8 @@ void loop() {
     }
     if(command==2){
       currentMode = MODE3;
+      neo.set(LEDKIND_BRESS, 128, 0, 0, 10);
+      //Serial.println(labels[2]);
       ledOn(LED2);
       ledOff(LED0);
       ledOff(LED1);
@@ -260,12 +311,14 @@ void loop() {
     }
     if(command==3){
       currentMode = MODE4;
+      //neo.set(LEDKIND_BRESS, 128, 128, 128, 10);
+      //Serial.println(labels[3]);
       ledOn(LED3);
       ledOff(LED0);
       ledOff(LED1);
       ledOff(LED2);
     }
-    
+    /*
     if(SW_Check()){
       if(command==0){
         currentMode = MODE1;
@@ -284,16 +337,20 @@ void loop() {
         ResetCanvas();
       }
     }
+    */
   }
   mainloop(currentMode);
 
-  /*
+  
   //所定の加速度より早い場合キャンバスを消す
-  if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*1.5){
+  if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*2.1){
+    canvas->PrintSerial28();
     ResetCanvas();
   }
-  */
 
+  
+
+  //Serial.println(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ()));
 
 }
 
