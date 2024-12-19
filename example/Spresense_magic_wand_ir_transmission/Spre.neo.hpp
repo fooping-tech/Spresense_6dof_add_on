@@ -48,7 +48,7 @@
 // NeoPixel Configuration
 //------------------------------------------------------------
 const uint16_t neoPin = 20;   // Pin number to which NeoPixels are connected
-const uint16_t neoNum = 4;   // Number of NeoPixels in the strip
+const uint16_t neoNum = 6;   // Number of NeoPixels in the strip
 SpresenseNeoPixel<neoPin, neoNum> npx;  // NeoPixel instance
 
 //------------------------------------------------------------
