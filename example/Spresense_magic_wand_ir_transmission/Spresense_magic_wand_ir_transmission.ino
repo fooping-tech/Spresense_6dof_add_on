@@ -75,7 +75,8 @@ enum MODE {
   MODE1,
   MODE2,
   MODE3,
-  MODE4
+  MODE4,
+  MODE5
 };
 MODE currentMode = MODE4;
 MODE beforeMode = MODE4;
@@ -92,7 +93,10 @@ bool _DeinitCondition=false;  //終了時状態
 File myFile;
 bool audio=false;
 
-int CheckCommand(){
+unsigned long ledStartTime = 0; // LED点灯開始時間
+int dnn_index=0;
+float dnn_score=0;
+void CheckCommand(){
   float *dnnbuf = input.data();
   int count=0;
   for (int i=0;i<DNN_DATA_WIDTH;i++) {
@@ -106,9 +110,10 @@ int CheckCommand(){
   dnnrt.forward();
 
   DNNVariable output = dnnrt.outputVariable(0);
-  int index = output.maxIndex();
-  Serial.println(labels[index]+":"+output[index]);
-  return index;
+  dnn_index = output.maxIndex();
+  dnn_score = output[dnn_index];
+  //Serial.println(labels[index]+":"+output[index]);
+  //return index;
 }
 
 void setup() {
@@ -117,13 +122,14 @@ void setup() {
   //SD
   SD.begin();
   //USB MSC
+  /*
   if (SD.beginUsbMsc()) {
     Serial.println("USB MSC Failure!");
   } else {
     Serial.println("*** USB MSC Prepared! ***");
     Serial.println("Insert SD and Connect Extension Board USB to PC.");
   }
-
+  */
   //IMU
   IMU_Init();
 
@@ -144,9 +150,8 @@ void setup() {
   
   //LED
   neo.begin();
-  neo.set(LEDKIND_BRESS, 128, 128, 128, 30);
+  //neo.set(LEDKIND_BRESS, 10, 10, 10, 10);
   neo.start();
-  
   //ジャイロセンサ
   GyroInit();
 
@@ -196,43 +201,67 @@ void mainloop(MODE m){
       //加速度のユークリッド距離を計算
       int vec = IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ());
       if(vec>11)trigTime=millis();//加速度が大きい場合はトリガタイムを更新
-      if(millis() - trigTime>1000){
-        stopTimer();
+      if(millis() - trigTime>1000){//n秒以上静止していたとき
+
         //モードごとの処理
         switch (m) {
           case MODE1:
             //TOF_SetLED(255,255,255);
             Serial.println(labels[0]);
+            stopTimer();
             Serial2.print('1');
+            delay(10);
+            startTimer();
             neo.set(LEDKIND_LEFTSTAR, 0, 0, 128, 10);
-            ResetCanvas();
+            currentMode = MODE5; 
+//            ResetCanvas();
             break;
 
           case MODE2:
             Serial.println(labels[1]);
+            stopTimer();
             Serial2.print('2');
+            delay(10);
+            startTimer();
             neo.set(LEDKIND_LEFTSTAR, 0, 128,0, 10);
-
-            ResetCanvas();
-            //TOF_SetLED(255,0,0);
+            currentMode = MODE5; 
+            //ResetCanvas();
             break;
 
           case MODE3:
             Serial.println(labels[2]);
+            stopTimer();
             Serial2.print('3');
+            delay(10);
+            startTimer();
             neo.set(LEDKIND_LEFTSTAR,128,0,0, 10);
-            ResetCanvas();
-            //TOF_SetLED(0,255,0);
-            //currentMode = MODE4;
+            currentMode = MODE5; 
+            //ResetCanvas();
             break;
 
           case MODE4:
-            Serial.println(labels[3]);
-            neo.set(LEDKIND_BRESS, 0, 0, 0, 10);
-            //TOF_SetLED(0,0,0);
+            //Serial.println(labels[3]);
+            //neo.set(LEDKIND_BRESS, 128, 128, 128, 10);
+            break;
+          case MODE5:
+            //魔法発動インジケート中
+            Serial.print(labels[dnn_index]);
+            Serial.print(":");
+            Serial.println(dnn_score);
+            if (ledStartTime == 0) {
+              ledStartTime = millis(); // LED点灯開始時間を記録
+              //neo.set(LEDKIND_BRESS, 255, 0, 255, 1000); // 紫色のLEDを点灯
+            }
+            
+            if (millis() - ledStartTime >= 100) { // n秒経過したら
+              currentMode = MODE4; // MODE4に戻る
+              neo.set(LEDKIND_BRESS, 4, 4, 4, 1); // 元の色に戻す
+              ResetCanvas(); // キャンバスをリセット
+              ledStartTime = 0; // LED点灯開始時間をリセット
+            }
             break;
         }
-        startTimer();
+        
       }
       
     }
@@ -269,76 +298,71 @@ void InitFunction(MODE m){//初回呼ばれる
   startTime = millis();
   _InitCondition=true;  //初回フラグon
 }
-
+MODE previousMode = MODE4; // 前回のモードを保存する変数
 
 void loop() {
   IMU_main();         //IMUセンサ値更新
   CANVAS_main();      //描画更新
-  if(RECORD_MODE == 0)command = CheckCommand(); //DNN
+  if(RECORD_MODE == 0)CheckCommand(); //DNN
   //SW_main();         //ボタンチェック(押下時Reset処理)
   Serial_main();      //Arduinoシリアル操作
 
   neo.update();
-  
-  //モード起動時処理
-  if(RECORD_MODE == 0){
-    if(command==0){
-      currentMode = MODE1;
-      //Serial.println(labels[0]);
-      neo.set(LEDKIND_BRESS, 0, 0, 128, 10);
-      ledOn(LED0);
-      ledOff(LED1);
-      ledOff(LED2);
-      ledOff(LED3);
-    }
-    if(command==1){
-      currentMode = MODE2;
-      //Serial.println(labels[1]);
-      neo.set(LEDKIND_BRESS, 0, 128, 0, 10);
-      ledOn(LED1);
-      ledOff(LED0);
-      ledOff(LED2);
-      ledOff(LED3);
-    }
-    if(command==2){
-      currentMode = MODE3;
-      neo.set(LEDKIND_BRESS, 128, 0, 0, 10);
-      //Serial.println(labels[2]);
-      ledOn(LED2);
-      ledOff(LED0);
-      ledOff(LED1);
-      ledOff(LED3);
-    }
-    if(command==3){
-      currentMode = MODE4;
-      //neo.set(LEDKIND_BRESS, 128, 128, 128, 10);
-      //Serial.println(labels[3]);
-      ledOn(LED3);
-      ledOff(LED0);
-      ledOff(LED1);
-      ledOff(LED2);
-    }
-    /*
-    if(SW_Check()){
-      if(command==0){
-        currentMode = MODE1;
-        ResetCanvas();
+  if(currentMode != MODE5){
+    //モード変更時の処理
+    if(RECORD_MODE == 0){
+      MODE newMode = MODE4; // デフォルトはMODE4
+
+      switch(dnn_index) {
+        case 0:
+          newMode = MODE1;
+          break;
+        case 1:
+          newMode = MODE2;
+          break;
+        case 2:
+          newMode = MODE3;
+          break;
+        case 3:
+          newMode = MODE4;
+          break;
       }
-      if(command==1){
-        currentMode = MODE2;
-        ResetCanvas();
-      }
-      if(command==2){
-        currentMode = MODE3;
-        ResetCanvas();
-      }
-      if(command==3){
-        currentMode = MODE4;
-        ResetCanvas();
+
+      if(newMode != previousMode) {
+        // モードが変更された場合のみcurrentModeをnewModeへ変更
+        currentMode = newMode;
+        switch(newMode) {
+          case MODE1:
+            ledOn(LED0);
+            ledOff(LED1);
+            ledOff(LED2);
+            ledOff(LED3);
+            break;
+          case MODE2:
+            ledOn(LED1);
+            ledOff(LED0);
+            ledOff(LED2);
+            ledOff(LED3);
+            break;
+          case MODE3:
+            ledOn(LED2);
+            ledOff(LED0);
+            ledOff(LED1);
+            ledOff(LED3);
+            break;
+          case MODE4:
+            ledOn(LED3);
+            ledOff(LED0);
+            ledOff(LED1);
+            ledOff(LED2);
+            break;
+        }
+        currentMode = newMode;
+        previousMode = newMode;
       }
     }
-    */
   }
+  
   mainloop(currentMode);
 
   
