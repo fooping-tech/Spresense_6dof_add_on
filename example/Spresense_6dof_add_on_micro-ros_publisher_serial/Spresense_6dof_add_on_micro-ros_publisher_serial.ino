@@ -129,15 +129,21 @@ void loop() {
     imu_msg.header.stamp.sec = millis() / 1000;
     imu_msg.header.stamp.nanosec = (millis() % 1000) * 1000000;
 
+    float ax =  -sensor_data.acc.y;
+    float ay =   sensor_data.acc.x;
+    float az =   sensor_data.acc.z;
+    float gx =  -sensor_data.gyr.y*M_PI/180.; // degree to radian
+    float gy =   sensor_data.gyr.x*M_PI/180.;  
+    float gz =   sensor_data.gyr.z*M_PI/180.;
     // 加速度データ（m/s²）に変換
-    imu_msg.linear_acceleration.x = sensor_data.acc.x / 16384.0f * 9.80665f;
-    imu_msg.linear_acceleration.y = sensor_data.acc.y / 16384.0f * 9.80665f;
-    imu_msg.linear_acceleration.z = sensor_data.acc.z / 16384.0f * 9.80665f;
+    imu_msg.linear_acceleration.x = ax;
+    imu_msg.linear_acceleration.y = ay;
+    imu_msg.linear_acceleration.z = az;
 
     // ジャイロデータ（rad/s）に変換
-    imu_msg.angular_velocity.x = sensor_data.gyr.x / 16.4f * (3.141592653589793f / 180.0f);
-    imu_msg.angular_velocity.y = sensor_data.gyr.y / 16.4f * (3.141592653589793f /180.0f);
-    imu_msg.angular_velocity.z = sensor_data.gyr.z /16.4f * (3.141592653589793f /180.0f);
+    imu_msg.angular_velocity.x = gx;
+    imu_msg.angular_velocity.y = gy;
+    imu_msg.angular_velocity.z = gz;
 
     RCSOFTCHECK(rcl_publish(&publisher, &imu_msg, NULL));
     
