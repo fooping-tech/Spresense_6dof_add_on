@@ -109,6 +109,7 @@ int CheckCommand(){
 void setup() {
   Serial.begin(115200);
  
+ 
   //SD
   SD.begin();
   //USB MSC
@@ -284,6 +285,7 @@ void loop() {
       }
     }
   }
+  //モードに応じて所定時間間隔TaskSpanで処理を行う
   mainloop(currentMode);
 
   
