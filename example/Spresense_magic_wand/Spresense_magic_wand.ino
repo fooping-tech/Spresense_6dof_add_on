@@ -175,24 +175,19 @@ void mainloop(MODE m){
       //Serial.println("Deinit");
       DeinitFunction();
     }else{
-      //Serial.println("main()");
         //モードごとの処理
     switch (m) {
       case MODE1:
-        //TOF_SetLED(255,255,255);      
-        break;
-
+      //モード1の処理をここに記入
+      break;
+      //モード2の処理をここに記入
       case MODE2:
-        //TOF_SetLED(255,0,0);
         break;
-
+      //モード3の処理をここに記入
       case MODE3:
-        //TOF_SetLED(0,255,0);
-        //currentMode = MODE4;
         break;
-
+      //モード4の処理をここに記入
       case MODE4:
-        //TOF_SetLED(0,0,0);
         break;
       }
       
