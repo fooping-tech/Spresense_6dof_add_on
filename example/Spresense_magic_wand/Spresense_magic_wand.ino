@@ -107,9 +107,8 @@ int CheckCommand(){
 }
 
 void setup() {
+  //Serial
   Serial.begin(115200);
- 
- 
   //SD
   SD.begin();
   //USB MSC
@@ -119,24 +118,21 @@ void setup() {
     Serial.println("*** USB MSC Prepared! ***");
     Serial.println("Insert SD and Connect Extension Board USB to PC.");
   }
-
   //IMU
   IMU_Init();
   //スイッチ
   switch1 = new SW(PIN_D21,INPUT_PULLUP);
   //タイマ割り込み
   attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
-
-  canvas = new CANVAS(240,240,0,0);    //杖軌跡
-
+  //杖軌跡
+  canvas = new CANVAS(240,240,0,0);    
   //DNN
-  //File nnbfile = Flash.open("model.nnb");
-  File nnbfile = SD.open("model.nnb");
+  //File nnbfile = Flash.open("model.nnb"); //Flashからモデルを読み出す場合
+  File nnbfile = SD.open("model.nnb");      //SDからモデルを読み出す場合
   int ret = dnnrt.begin(nnbfile);
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));
   }
-
   //ジャイロセンサ
   GyroInit();
   //MadgWick
