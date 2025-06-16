@@ -43,12 +43,7 @@ BMI270Class BMI270;
 
 //Canvas
 #include "CANVAS.h"
-CANVAS *canvas1;
-CANVAS *canvas2;
-CANVAS *canvas3;
-CANVAS *canvas4;
-CANVAS *canvas5;
-CANVAS *canvas6;
+CANVAS *canvas;
 //SW
 #include "SW.h"
 SW *switch1;
@@ -98,7 +93,7 @@ int CheckCommand(){
   int count=0;
   for (int i=0;i<DNN_DATA_WIDTH;i++) {
     for (int j=0;j<DNN_DATA_HEIGHT;j++) {
-      dnnbuf[count] = canvas4->output[i + 28 * j];
+      dnnbuf[count] = canvas->output[i + 28 * j];
       count++;
     }
   }
@@ -126,12 +121,12 @@ void setup() {
 
   //IMU
   IMU_Init();
-
+  //スイッチ
   switch1 = new SW(PIN_D21,INPUT_PULLUP);
   //タイマ割り込み
   attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
 
-  canvas4 = new CANVAS(240,240,0,0);    //杖軌跡
+  canvas = new CANVAS(240,240,0,0);    //杖軌跡
 
   //DNN
   //File nnbfile = Flash.open("model.nnb");
@@ -140,21 +135,19 @@ void setup() {
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));
   }
-  
+
   //ジャイロセンサ
   GyroInit();
-
   //MadgWick
   MadgWick_Init();
-  
-  
+  //初期化完了表示
   Serial.println("Setup_Finished!!");
 }
 
 
 void CANVAS_main(){
   //杖軌跡描画
-  canvas4->WandDraw28(heading,roll);
+  canvas->WandDraw28(heading,roll);
 }
 
 void mainloop(MODE m){
@@ -178,16 +171,32 @@ void mainloop(MODE m){
         //モードごとの処理
     switch (m) {
       case MODE1:
-      //モード1の処理をここに記入
-      break;
-      //モード2の処理をここに記入
+        //モード1の処理をここに記入
+        ledOn(LED0);
+        ledOff(LED1);
+        ledOff(LED2);
+        ledOff(LED3);
+        break;
       case MODE2:
+        //モード2の処理をここに記入
+        ledOn(LED1);
+        ledOff(LED0);
+        ledOff(LED2);
+        ledOff(LED3);
         break;
-      //モード3の処理をここに記入
       case MODE3:
+        //モード3の処理をここに記入
+        ledOn(LED2);
+        ledOff(LED0);
+        ledOff(LED1);
+        ledOff(LED3);
         break;
-      //モード4の処理をここに記入
       case MODE4:
+        //モード4の処理をここに記入
+        ledOn(LED3);
+        ledOff(LED0);
+        ledOff(LED1);
+        ledOff(LED2);
         break;
       }
       
@@ -230,69 +239,58 @@ void InitFunction(MODE m){//初回呼ばれる
 void loop() {
   IMU_main();         //IMUセンサ値更新
   CANVAS_main();      //描画更新
-  if(RECORD_MODE == 0)command = CheckCommand(); //DNN
-  //SW_main();         //ボタンチェック(押下時Reset処理)
   Serial_main();      //Arduinoシリアル操作
 
-  //モード起動時処理
   if(RECORD_MODE == 0){
+    command = CheckCommand(); //DNNでコマンドを推論
     if(command==0){
       currentMode = MODE1;
-      ledOn(LED0);
-      ledOff(LED1);
-      ledOff(LED2);
-      ledOff(LED3);
     }
     if(command==1){
       currentMode = MODE2;
-      ledOn(LED1);
-      ledOff(LED0);
-      ledOff(LED2);
-      ledOff(LED3);
     }
     if(command==2){
       currentMode = MODE3;
-      ledOn(LED2);
-      ledOff(LED0);
-      ledOff(LED1);
-      ledOff(LED3);
     }
     if(command==3){
       currentMode = MODE4;
-      ledOn(LED3);
-      ledOff(LED0);
-      ledOff(LED1);
-      ledOff(LED2);
     }
     
+    //スイッチを押下した時の処理
     if(SW_Check()){
       if(command==0){
         currentMode = MODE1;
+        //モード1時のスイッチ押下処理をここに記入
+        Serial.println("モード1を発動しました");
         ResetCanvas();
       }
       if(command==1){
         currentMode = MODE2;
+        //モード2時のスイッチ押下処理をここに記入
+        Serial.println("モード2を発動しました");
         ResetCanvas();
       }
       if(command==2){
         currentMode = MODE3;
+        //モード3時のスイッチ押下処理をここに記入
+        Serial.println("モード3を発動しました");
         ResetCanvas();
       }
       if(command==3){
         currentMode = MODE4;
+        //モード4時のスイッチ押下処理をここに記入
+        Serial.println("モード4を発動しました");
         ResetCanvas();
       }
     }
   }
   mainloop(currentMode);
 
-  /*
+  
   //所定の加速度より早い場合キャンバスを消す
-  if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*1.5){
-    ResetCanvas();
-  }
-  */
-
-
+  //if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*1.5){
+  //  ResetCanvas();
+  //}
+  
 }
 

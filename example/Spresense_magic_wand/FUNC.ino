@@ -70,9 +70,9 @@ unsigned int TimerInterruptFunction() {
 //Canvasリセット
 void ResetCanvas(){
     MadgWick_Init();     //フィルタおよび変数を初期化
-    canvas4->Reset();    //Canvasを初期化
-    delete canvas4;
-    canvas4 = new CANVAS(240,240,0,0);    //杖軌跡
+    canvas->Reset();    //Canvasを初期化
+    delete canvas;
+    canvas = new CANVAS(240,240,0,0);    //杖軌跡
 }
 
 //MadgWickフィルタ初期化
@@ -132,7 +132,7 @@ void Serial_main(){
         Serial.println(label);  
     }
     if (receivedChar == 'p') { // もし受信したデータが'p'なら
-        canvas4->PrintSerial28();
+        canvas->PrintSerial28();
     }
     if (receivedChar == 'r') { // もし受信したデータが'r'なら
         ResetCanvas();
@@ -156,8 +156,8 @@ void SaveCSV(){
 
   for (int i=0;i<28;i++) {
     for (int j=0;j<28;j++) {
-      myFile.print(canvas4->output[i + 28 * j]);
-      //Serial.print(canvas4->output[i + 28 * j]);
+      myFile.print(canvas->output[i + 28 * j]);
+      //Serial.print(canvas->output[i + 28 * j]);
       if(j!=27)myFile.print(",");
       //Serial.print(",");
     }
