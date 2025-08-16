@@ -21,3 +21,7 @@ SONYスプレッセンス用の6軸加速度角速度センサアドオンボー
 
 ## 応用例
 [SPRESENSEで作る魔法の杖の解説ページ](https://elchika.com/article/36d2318e-f1a6-45ce-92c1-c1d168493275/)
+[トランジスタ技術掲載記事](https://toragi.cqpub.co.jp/wp-content/uploads/202508_p224.pdf)
+
+## 応用例2
+[魔法の杖の赤外線受信機](https://github.com/fooping-tech/ir_rx_magicwand)
